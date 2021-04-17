@@ -1,6 +1,7 @@
 import graphene, json
 import pymysql
 import secrets
+import random
 
 from flask_sqlalchemy import SQLAlchemy 
 from flask import Flask, request
@@ -20,20 +21,30 @@ class Users(db.Model):
     display_name = db.Column(db.VARCHAR(25), unique=True, nullable=False)
     coin_val = db.Column(db.Integer)
     # representation of data for testing
-    def __repr__(self):
-        return "successfully added user {}, named {}".format(id, display_name)
 
+
+# model of Offers table from SQL database
+class Offers(db.Model):
+    offerID = db.Column(db.Integer, primary_key=True)
+    coinCoinOffer = db.Column(db.Integer)
+    USDOffer = db.Column(db.Float)
+    ID = db.Column(db.Integer)
+    
+    def __repr__(self):
+        return "Offer ID {} created, {} coincoins for ${} ".format(offerID, coinCoinOffer, USDOffer)
+    
+
+
+# structure of query for graphql api
 class Query(graphene.ObjectType):
-    createUser = graphene.String(id=graphene.ID(), email=graphene.String(), displayName=graphene.String(), coinVal=graphene.Int())
-    data = graphene.String(name=graphene.String(), age=graphene.Int())
+    createUser = graphene.String(email=graphene.String(), displayName=graphene.String(), coinVal=graphene.Int())
+    createOffer = graphene.String(id=graphene.Int(), coinOffer=graphene.Int(), USDOffer=graphene.Float())
     
     """
     createUser method
 
     Fields
     ------
-    id : int
-        Unique User ID number
     email : str
         User's email
     displayName : str
@@ -42,20 +53,45 @@ class Query(graphene.ObjectType):
         The number of "CoinCoins" the user has
 
     """
-    def resolve_createUser(root, info, id, email, displayName, coinVal):
-        newUser_json = {
+    def resolve_createUser(root, info, email, displayName, coinVal):
+        id = int("{}{}{}{}{}{}{}{}".format(random.randint(0, 6), random.randint(0, 6), random.randint(0, 6), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9)))
+        all_ids = [x.id for x in Users.query.all()]
+        print(Users.query.all())
+        newUser_json = {    
             "id": id,
             "email": email,
             "displayName": displayName,
             "coinVal": coinVal
         }
+        
+        # adding new user to database
         newUser = Users(id=id, email=email, display_name=displayName, coin_val=coinVal)
         db.session.add(newUser)
         db.session.commit()
         return newUser_json
 
-    def resolve_data(root, info, name, age):
-        return name, age
+    """
+    createOffer method
+
+    Fields
+    ------
+    id : int
+        Unique User ID number
+    coinOffer : int
+        The number of CoinCoins for USD
+    USDOffer : int
+        The number of USD for CoinCoins
+
+    """
+
+    def resolve_createOffer(root, info, id, coinOffer, USDOffer):
+        backOfferID = int("{}{}{}{}{}{}{}{}".format(random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9)))
+
+        dbOffer = Offers(offerID=backOfferID, coinCoinOffer=coinOffer, USDOffer=USDOffer, ID=id)
+        db.session.add(dbOffer)
+        db.session.commit()
+
+        return "Created offers"
         
 
 schema = graphene.Schema(query=Query)
