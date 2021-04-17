@@ -142,3 +142,4 @@ serviceAccountKey.json
 .vscode
 app.yaml
 secrets.py
+development.session.sql
