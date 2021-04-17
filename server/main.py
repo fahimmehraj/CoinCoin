@@ -22,7 +22,7 @@ class User(db.Model):
     email = db.Column(db.VARCHAR(255), unique=True, nullable=False)
     display_name = db.Column(db.VARCHAR(25), unique=True, nullable=False)
     coin_val = db.Column(db.Integer)
-    offers = db.relationship('Offer', backref=db.backref("User"))
+    offers = db.relationship('Offer', backref=db.backref("user"))
     # representation of data for testing
 
 
@@ -31,7 +31,7 @@ class Offer(db.Model):
     offerID = db.Column(db.Integer, primary_key=True)
     coinCoinOffer = db.Column(db.Integer)
     USDOffer = db.Column(db.Float)
-    userID = db.Column(db.Integer, db.ForeignKey('User.userID'), nullable=False)
+    userID = db.Column(db.Integer, db.ForeignKey(User.userID), nullable=False)
     
     def __repr__(self):
         return "Offer ID {} created, {} coincoins for ${} ".format(offerID, coinCoinOffer, USDOffer)
@@ -101,6 +101,8 @@ schema = graphene.Schema(query=Query)
 
 @app.route("/graphql", methods=["GET", "POST"])
 def graphql():
+    for table in db.metadata.tables:
+        print(str(table))
     data = json.loads(request.data)
     result = schema.execute(data['query'])
     if request.method == "GET":
