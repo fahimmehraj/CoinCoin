@@ -15,20 +15,21 @@ db = SQLAlchemy(app)
 
 
 # model of user table from SQL database
-class Users(db.Model):
-    userID = db.Column(db.Integer, primary_key=True)
+class User(db.Model):
+    userID = db.Column(db.Integer, primary_key=True, nullable=False)
     email = db.Column(db.VARCHAR(255), unique=True, nullable=False)
-    display_name = db.Column(db.VARCHAR(25), nullable=False)
+    display_name = db.Column(db.VARCHAR(25), unique=True, nullable=False)
     coin_val = db.Column(db.Integer)
+    offers = db.relationship('Offer', backref=db.backref("user"))
     # representation of data for testing
 
-
 # model of Offers table from SQL database
-class Offers(db.Model):
+class Offer(db.Model):
     offerID = db.Column(db.Integer, primary_key=True)
     coinCoinOffer = db.Column(db.Integer)
     USDOffer = db.Column(db.Float)
-    userID = db.Column(db.Integer, db.ForeignKey('users.userID'))
+    userID = db.Column(db.Integer)
+    userID = db.Column(db.Integer, db.ForeignKey(User.userID), nullable=False)
     
     def __repr__(self):
         return "Offer ID {} created, {} coincoins for ${} ".format(offerID, coinCoinOffer, USDOffer)
@@ -57,7 +58,7 @@ class Query(graphene.ObjectType):
     """
     def resolve_createUser(root, info, email, displayName, coinVal):
         id = int("{}{}{}{}{}{}{}{}".format(random.randint(0, 6), random.randint(0, 6), random.randint(0, 6), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9)))
-        all_ids = [x.userID for x in Users.query.all()]
+        all_ids = [x.userID for x in User.query.all()]
         
         newUser_json = {    
             "userID": id,
@@ -67,7 +68,7 @@ class Query(graphene.ObjectType):
         }
         
         # adding new user to database
-        newUser = Users(userID=id, email=email, display_name=displayName, coin_val=coinVal)
+        newUser = User(userID=id, email=email, display_name=displayName, coin_val=coinVal) 
         db.session.add(newUser)
         db.session.commit()
         return newUser_json
@@ -89,7 +90,7 @@ class Query(graphene.ObjectType):
     def resolve_createOffer(root, info, userID, coinOffer, USDOffer):
         backOfferID = int("{}{}{}{}{}{}{}{}".format(random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9)))
 
-        dbOffer = Offers(offerID=backOfferID, coinCoinOffer=coinOffer, USDOffer=USDOffer, userID=userID)
+        dbOffer = Offer(offerID=backOfferID, coinCoinOffer=coinOffer, USDOffer=USDOffer, userID=userID)
         db.session.add(dbOffer)
         db.session.commit()
 
@@ -98,7 +99,7 @@ class Query(graphene.ObjectType):
     def resolve_getUser(root, info, userID, displayName):
         # if no user ID is specified, search by display name
         if userID == 2:
-            query_user = Users.query.filter_by(display_name=displayName)
+            query_user = User.query.filter_by(display_name=displayName)
             response = {}
             for user in query_user:
                 print(user)
@@ -112,6 +113,8 @@ schema = graphene.Schema(query=Query)
 
 @app.route("/graphql", methods=["GET", "POST"])
 def graphql():
+    for table in db.metadata.tables:
+        print(str(table))
     data = json.loads(request.data)
     result = schema.execute(data['query'])
     return json.dumps(result.data)
