@@ -1,13 +1,17 @@
 import NavigationBar from '../components/navbar'
 
-import '../styles/globals.css'
+import type { AppProps } from 'next/app'
 
-function MyApp({ Component, pageProps }) {
+import '../styles/globals.css'
+import Footer from '../components/Footer'
+
+function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <>
+    <div className="relative h-screen bg-gray-100">
       <NavigationBar />
       <Component {...pageProps} />
-    </>
+      <Footer />
+      </div>
   )
 }
 
