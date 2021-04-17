@@ -16,6 +16,8 @@ db = SQLAlchemy(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.VARCHAR(255), unique=True, nullable=False)
+    display_name = db.Column(db.VARCHAR(25), unique=True, nullable=False)
+    coin_val = db.Column(db.Integer)
 
     # representation of data for testing
     def __repr__(self):
