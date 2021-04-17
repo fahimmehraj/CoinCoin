@@ -3,6 +3,7 @@ import pymysql
 import secrets
 import random
 
+from graphene.types import generic
 from flask_sqlalchemy import SQLAlchemy 
 from flask import Flask, request
 
@@ -21,7 +22,7 @@ class User(db.Model):
     display_name = db.Column(db.VARCHAR(25), unique=True, nullable=False)
     coin_val = db.Column(db.Integer)
     offers = db.relationship('Offer', backref=db.backref("user"))
-    # representation of data for testing
+    
 
 # model of Offers table from SQL database
 class Offer(db.Model):
@@ -35,14 +36,15 @@ class Offer(db.Model):
         return "Offer ID {} created, {} coincoins for ${} ".format(offerID, coinCoinOffer, USDOffer)
     
 
-
 # structure of query for graphql api
 class Query(graphene.ObjectType):
     createUser = graphene.String(email=graphene.String(), displayName=graphene.String(), coinVal=graphene.Int())
-
-    getUser= graphene.String(userID=graphene.Int(default_value=2), displayName=graphene.String(default_value=""))
     
     createOffer = graphene.String(userID=graphene.Int(), coinOffer=graphene.Int(), USDOffer=graphene.Float())
+
+    getUser= graphene.List(of_type=generic.GenericScalar, userID=graphene.Int(default_value=2), displayName=graphene.String(default_value=""))
+
+        
     """
     createUser method
 
@@ -96,29 +98,46 @@ class Query(graphene.ObjectType):
 
         return "Created offer {} by {}".format(backOfferID, userID)
     
-    def resolve_getUser(root, info, userID, displayName):
+    def resolve_getUser(self, info, userID, displayName):
         # if no user ID is specified, search by display name
         if userID == 2:
             query_user = User.query.filter_by(display_name=displayName)
-            response = {}
+            response = []
             for user in query_user:
-                print(user)
-            return query_user.all()
+                temp_dict = {
+                    "userID": user.userID,
+                    "displayName": user.display_name,
+                    "email": user.email,
+                    "coinVal": user.coin_val
+                }
+                
+                response.append(temp_dict)
+            return response
         # if no display name is specified, search by user ID
         elif displayName == "":
-            return displayName
+            query_user = User.query.filter_by(userID=userID)
+            response = []
+            for user in query_user:
+                temp_dict = {
+                    "userID": user.userID,
+                    "displayName": user.display_name,
+                    "email": user.email,
+                    "coinVal": user.coin_val
+                }
+                response.append(temp_dict)
+            return response
 
 
 schema = graphene.Schema(query=Query)
 
 @app.route("/graphql", methods=["GET", "POST"])
 def graphql():
-    for table in db.metadata.tables:
-        print(str(table))
+
     data = json.loads(request.data)
     result = schema.execute(data['query'])
     return json.dumps(result.data)
 
 if __name__ == '__main__':
     app.run(debug=True)
-    
+
+
