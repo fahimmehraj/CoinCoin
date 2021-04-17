@@ -1,6 +1,7 @@
 import graphene, json
 import pymysql
-import secrets 
+import secrets
+import graphql_query
 
 from flask_sqlalchemy import SQLAlchemy 
 from flask import Flask, request
@@ -25,19 +26,15 @@ class DB_User(db.Model):
 
 
 # structure of a query to graphql API
-class Query(graphene.ObjectType):
-    data = graphene.String(id=graphene.ID(), email=graphene.String(), displayName=graphene.String(), coinVal=graphene.Int())
-    def resolve_data(root, info, id, email, displayName, coinVal):
-        return id, email, displayName, coinVal
-        
-schema = graphene.Schema(query=Query)
+
+schema = graphene.Schema(query=graphql_query.Query)
 
 @app.route("/graphql", methods=["POST"])
 def graphql():
     data = json.loads(request.data)
     result = schema.execute(data['query'])
-    items = dict(result.data.items())
-    return json.dumps(items)
+    #items = dict(result.data.items())
+    return json.dumps(result.data)
 
 if __name__ == '__main__':
     app.run(debug=True)
