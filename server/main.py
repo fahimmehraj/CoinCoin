@@ -38,7 +38,7 @@ class Offer(db.Model):
     
     def __repr__(self):
         return "Offer ID {} created, {} coincoins for ${} ".format(offerID, coinCoinOffer, USDOffer)
-
+# mutations
 class CreateUser(graphene.Mutation):
     class Arguments:
         userID = graphene.String()
@@ -109,6 +109,8 @@ class Query(graphene.ObjectType):
     getOfferbyID = graphene.Field(GraphQL_offer, offerID=graphene.Int(default_value=-1))
 
     mineCoinCoins = graphene.Field(GraphQL_user, userID=graphene.String(default_value="none"))
+
+    transaction = graphene.Boolean(offerID=graphene.Int(), userID=graphene.String())
 
     user = graphene.Field(GraphQL_user)
 
@@ -286,7 +288,16 @@ class Query(graphene.ObjectType):
             email=user.email,
             coinVal=user.coin_val
         )        
-    
+    def resolve_transaction(self, info, offerID, userID):
+        offer = Offer.query.filter_by(offerID=offerID).first()
+        user = User.query.filter_by(userID=userID).first()
+        coinCoins = offer.coinCoinOffer
+        currentCoinVal = user.coin_val 
+        user.coin_val = currentCoinVal+coinCoins
+        db.session.delete(offer)
+        db.session.commit()
+        return True
+
     def resolve_getOfferbyID(self, info, offerID):
         offer = Offer.query.filter_by(offerID=offerID).first()
         return GraphQL_offer(
