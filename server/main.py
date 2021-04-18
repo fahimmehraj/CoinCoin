@@ -108,6 +108,8 @@ class Query(graphene.ObjectType):
 
     getOfferbyID = graphene.Field(GraphQL_offer, offerID=graphene.Int(default_value=-1))
 
+    mineCoinCoins = graphene.Field(GraphQL_user, userID=graphene.String(default_value="none"))
+
     user = graphene.Field(GraphQL_user)
 
     offer = graphene.Field(GraphQL_offer)
@@ -223,7 +225,7 @@ class Query(graphene.ObjectType):
     A list of users containing information such as their ID, display name, email, and number of CoinCoins they have.
 
     """
-
+    # deprecated, use resolve_getUserbyID instead
     def resolve_getUser(self, info, userID, displayName):
         # if no user ID is specified, search by display name
         if userID == "none":
@@ -252,7 +254,7 @@ class Query(graphene.ObjectType):
                 }
                 response.append(temp_dict)
             return response
-
+    
     def resolve_offers(self, info, **args):
         all_offers = Offer.query.all()
         response = []
@@ -265,12 +267,25 @@ class Query(graphene.ObjectType):
                 })
         return response;
 
+    # deprecated, use resolve_mineCoinCoins instead
     def resolve_mineCoin(self, info, userID):
         query_user = User.query.filter_by(userID=userID)[0]
         current_coinVal = query_user.coin_val
         query_user.coin_val = current_coinVal+1
         db.session.commit()
         return "User {} now has {} coincoins (previous was {}).".format(userID, current_coinVal+1, current_coinVal)
+    
+    def resolve_mineCoinCoins(self, info, userID):
+        user = User.query.filter_by(userID=userID).first()
+        newCoinVal = user.coin_val+1
+        user.coin_val = newCoinVal
+        db.session.commit()
+        return GraphQL_user(
+            userID=user.userID,
+            displayName=user.display_name,
+            email=user.email,
+            coinVal=user.coin_val
+        )        
     
     def resolve_getOfferbyID(self, info, offerID):
         offer = Offer.query.filter_by(offerID=offerID).first()
