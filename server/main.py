@@ -112,6 +112,8 @@ class Query(graphene.ObjectType):
 
     transaction = graphene.Boolean(offerID=graphene.Int(), userID=graphene.String())
 
+    cancelOffer = graphene.Boolean(offerID=graphene.Int())
+
     user = graphene.Field(GraphQL_user)
 
     offer = graphene.Field(GraphQL_offer)
@@ -131,6 +133,7 @@ class Query(graphene.ObjectType):
         The number of "CoinCoins" the user has
 
     """
+    # deprecated
     def resolve_createUser(root, info, userID, email, displayName, coinVal):
         
         newUser_json = {    
@@ -159,7 +162,7 @@ class Query(graphene.ObjectType):
         The number of USD for CoinCoins
 
     """
-
+    # deprecated
     def resolve_createOffer(root, info, userID, coinOffer, USDOffer):
         backOfferID = int("{}{}{}{}{}{}{}{}".format(random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9)))
 
@@ -183,7 +186,7 @@ class Query(graphene.ObjectType):
     -------
     A list of offers
     """
-
+    # deprecated
     def resolve_getOffer(self, info, offerID, userID):
         # if no offer ID is specified, search by user ID
         if offerID == 1:
@@ -277,6 +280,8 @@ class Query(graphene.ObjectType):
         db.session.commit()
         return "User {} now has {} coincoins (previous was {}).".format(userID, current_coinVal+1, current_coinVal)
     
+
+    # API Rewrite Methods
     def resolve_mineCoinCoins(self, info, userID):
         user = User.query.filter_by(userID=userID).first()
         newCoinVal = user.coin_val+1
@@ -297,6 +302,12 @@ class Query(graphene.ObjectType):
         db.session.delete(offer)
         db.session.commit()
         return True
+    def resolve_cancelOffer(self, info, offerID):
+        offer=Offer.query.filter_by(offerID=offerID).first()
+        db.session.delete(offer)
+        db.session.commit()
+        return True
+
 
     def resolve_getOfferbyID(self, info, offerID):
         offer = Offer.query.filter_by(offerID=offerID).first()
