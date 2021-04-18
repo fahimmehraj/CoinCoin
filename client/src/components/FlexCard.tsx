@@ -1,4 +1,5 @@
 import { FunctionComponent } from "react";
+import { useAuth } from "../utils/context/store";
 
 type FlexCardProps = {
   caption: string,
@@ -7,8 +8,10 @@ type FlexCardProps = {
   imageURL?: string,
 }
 
-const FlexCard: FunctionComponent<FlexCardProps> = ({ title, caption, description, imageURL, children }) => (
-    <div className="w-full lg:w-6/12 xl:w-3/12 px-4 flex-grow h-full">
+const FlexCard: FunctionComponent<FlexCardProps> = ({ title, caption, description, imageURL, children }) => {
+  const { state } = useAuth()
+
+    return (<div className="w-full lg:w-6/12 xl:w-3/12 px-4 flex-grow h-full">
                   <div className="relative flex flex-col min-w-0 break-words bg-white rounded mb-6 xl:mb-0 shadow-lg">
                     <div className="flex-auto p-4">
                       <div className="flex flex-wrap">
@@ -35,6 +38,7 @@ const FlexCard: FunctionComponent<FlexCardProps> = ({ title, caption, descriptio
                         <button
                                 className="bg-purple-500 hover:bg-purple-600 hover:shadow text-white active:bg-indigo-600 text-xs font-bold uppercase px-8 py-3 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                                 type="button"
+                                onClick={() => console.log(state.authData)}
                             >
                                 {caption}
                       </button>
@@ -42,7 +46,7 @@ const FlexCard: FunctionComponent<FlexCardProps> = ({ title, caption, descriptio
                       </p>
                     </div>
                   </div>
-                </div>
-)
+                </div>)
+}
 
 export default FlexCard;
