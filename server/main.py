@@ -7,7 +7,7 @@ from graphene.types import generic
 from flask_sqlalchemy import SQLAlchemy 
 from flask import Flask, request
 from flask_graphql import GraphQLView
-from graphene_user import GraphQL_user
+from schemas import GraphQL_user, GraphQL_offer
 from flask_cors import CORS
 
 conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(secrets.dbuser, secrets.dbpass, secrets.dbhost, secrets.dbname)
@@ -56,7 +56,7 @@ class Query(graphene.ObjectType):
 
     getUserbyID = graphene.Field(GraphQL_user, userID=graphene.String(default_value="none"))
 
-
+    getOfferbyID = graphene.Field(GraphQL_offer, offerID=graphene.Int(default_value=-1))
         
     """
     createUser method
@@ -131,7 +131,7 @@ class Query(graphene.ObjectType):
             response = []
             for offer in query_offer:
                 temp_dict = {
-                    "OfferID": offer.offerID,
+                    "offerID": offer.offerID,
                     "USD_Offer": offer.USDOffer,
                     "coin_Offer": offer.coinCoinOffer,
                     "userID": offer.userID
@@ -215,6 +215,15 @@ class Query(graphene.ObjectType):
         query_user.coin_val = current_coinVal+1
         db.session.commit()
         return "User {} now has {} coincoins (previous was {}).".format(userID, current_coinVal+1, current_coinVal)
+    
+    def resolve_getOfferbyID(self, info, offerID):
+        offer = Offer.query.filter_by(offerID=offerID).first()
+        return GraphQL_offer(
+            offerID=offer.offerID,
+            USD_Offer=offer.USDOffer,
+            coin_Offer=offer.coinCoinOffer,
+            userID=offer.userID
+        )
 
     def resolve_getUserbyID(self, info, userID):
         user = User.query.filter_by(userID=userID).first()
