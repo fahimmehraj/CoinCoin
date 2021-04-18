@@ -6,6 +6,8 @@ import random
 from graphene.types import generic
 from flask_sqlalchemy import SQLAlchemy 
 from flask import Flask, request
+from flask_graphql import GraphQLView
+from graphene_user import GraphQL_user
 
 conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(secrets.dbuser, secrets.dbpass, secrets.dbhost, secrets.dbname)
 
