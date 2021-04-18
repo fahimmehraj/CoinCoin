@@ -38,7 +38,56 @@ class Offer(db.Model):
     
     def __repr__(self):
         return "Offer ID {} created, {} coincoins for ${} ".format(offerID, coinCoinOffer, USDOffer)
-    
+
+class CreateUser(graphene.Mutation):
+    class Arguments:
+        userID = graphene.String()
+        email = graphene.String()
+        displayName = graphene.String()
+        coinVal = graphene.Int()
+    ok = graphene.Boolean()
+    user = graphene.Field(lambda: GraphQL_user)
+
+    def mutate(self, info, userID, email, displayName, coinVal):
+        user = GraphQL_user(
+            userID=userID,
+            email=email,
+            displayName=displayName,
+            coinVal=coinVal
+        )
+        DB_User = User(userID=userID, email=email, display_name=displayName, coin_val=coinVal)
+        db.session.add(DB_User)
+        db.session.commit()
+        ok = True
+        return CreateUser(user=user, ok=ok)
+
+class CreateOffer(graphene.Mutation):
+    class Arguments:
+        USDOffer = graphene.Float()
+        coinOffer = graphene.Int()
+        userID = graphene.String()
+    ok = graphene.Boolean()
+    offer = graphene.Field(lambda: GraphQL_offer)
+
+    def mutate(self, info, USDOffer, coinOffer, userID):
+        backOfferID = int("{}{}{}{}{}{}{}{}".format(random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9)))
+
+        offer = GraphQL_offer(
+            offerID = backOfferID,
+            USD_Offer = USDOffer,
+            coin_Offer = coinOffer,
+            userID = userID
+        )
+        DB_Offer = Offer(offerID=backOfferID, coinCoinOffer=coinOffer, USDOffer=USDOffer, userID=userID)
+        db.session.add(DB_Offer)
+        db.session.commit()
+        ok = True
+        return CreateOffer(offer=offer, ok=ok)
+
+
+class Mutations(graphene.ObjectType):
+    create_user = CreateUser.Field()
+    create_offer = CreateOffer.Field()
 
 # structure of query for graphql api
 class Query(graphene.ObjectType):
@@ -54,9 +103,16 @@ class Query(graphene.ObjectType):
 
     mineCoin=graphene.String(userID=graphene.String())
 
+    # API rewrite methods
     getUserbyID = graphene.Field(GraphQL_user, userID=graphene.String(default_value="none"))
 
     getOfferbyID = graphene.Field(GraphQL_offer, offerID=graphene.Int(default_value=-1))
+
+    user = graphene.Field(GraphQL_user)
+
+    offer = graphene.Field(GraphQL_offer)
+
+
         
     """
     createUser method
@@ -236,7 +292,7 @@ class Query(graphene.ObjectType):
             coinVal=user.coin_val
         )
 
-schema = graphene.Schema(query=Query)
+schema = graphene.Schema(query=Query, mutation=Mutations)
 
 app.add_url_rule('/graphql', view_func=GraphQLView.as_view(
     'graphql',
