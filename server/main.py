@@ -8,10 +8,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, request
 from flask_graphql import GraphQLView
 from graphene_user import GraphQL_user
+from flask_cors import CORS
 
 conn = "mysql+pymysql://{0}:{1}@{2}/{3}".format(secrets.dbuser, secrets.dbpass, secrets.dbhost, secrets.dbname)
 
 app = Flask(__name__)
+CORS(app, origin="localhost:3000")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = conn
 db = SQLAlchemy(app) 
@@ -51,6 +53,8 @@ class Query(graphene.ObjectType):
     offers = graphene.List(of_type=generic.GenericScalar, offerID=graphene.Int(default_value=1), userID=graphene.String(default_value="none"))
 
     mineCoin=graphene.String(userID=graphene.String())
+
+    getUserbyID = graphene.Field(GraphQL_user, userID=graphene.String(default_value="none"))
 
 
         
@@ -212,14 +216,25 @@ class Query(graphene.ObjectType):
         db.session.commit()
         return "User {} now has {} coincoins (previous was {}).".format(userID, current_coinVal+1, current_coinVal)
 
+    def resolve_getUserbyID(self, info, userID):
+        user = User.query.filter_by(userID=userID).first()
+        print(user.userID)
+        print(user.display_name)
+        return GraphQL_user(
+            userID=user.userID,
+            displayName=user.display_name,
+            email=user.email,
+            coinVal=user.coin_val
+        )
+
 schema = graphene.Schema(query=Query)
 
-@app.route("/graphql", methods=["GET", "POST"])
-def graphql():
+app.add_url_rule('/graphql', view_func=GraphQLView.as_view(
+    'graphql',
+    schema=schema,
+    graphiql=True,
+))
 
-    data = json.loads(request.data)
-    result = schema.execute(data['query'])
-    return json.dumps(result.data)
 
 if __name__ == '__main__':
     app.run(debug=True)
