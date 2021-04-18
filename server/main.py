@@ -17,7 +17,7 @@ db = SQLAlchemy(app)
 
 # model of user table from SQL database
 class User(db.Model):
-    userID = db.Column(db.Integer, primary_key=True, nullable=False)
+    userID = db.Column(db.String, primary_key=True, nullable=False)
     email = db.Column(db.VARCHAR(255), unique=True, nullable=False)
     display_name = db.Column(db.VARCHAR(25), unique=True, nullable=False)
     coin_val = db.Column(db.Integer)
@@ -26,7 +26,7 @@ class User(db.Model):
 
 # model of Offers table from SQL database
 class Offer(db.Model):
-    offerID = db.Column(db.Integer, primary_key=True)
+    offerID = db.Column(db.String, primary_key=True)
     coinCoinOffer = db.Column(db.Integer)
     USDOffer = db.Column(db.Float)
     userID = db.Column(db.Integer)
