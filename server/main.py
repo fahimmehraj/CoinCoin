@@ -46,6 +46,9 @@ class Query(graphene.ObjectType):
 
     getOffer = graphene.List(of_type=generic.GenericScalar, offerID=graphene.Int(default_value=1), userID=graphene.Int(default_value=1))
 
+    mineCoin=graphene.String(userID=graphene.Int())
+
+
         
     """
     createUser method
@@ -188,6 +191,12 @@ class Query(graphene.ObjectType):
                 response.append(temp_dict)
             return response
 
+    def resolve_mineCoin(self, info, userID):
+        query_user = User.query.filter_by(userID=userID)[0]
+        current_coinVal = query_user.coin_val
+        query_user.coin_val = current_coinVal+1
+        db.session.commit()
+        return "User {} now has {} coincoins (previous was {}).".format(userID, current_coinVal+1, current_coinVal)
 
 schema = graphene.Schema(query=Query)
 
