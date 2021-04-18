@@ -324,14 +324,15 @@ class Query(graphene.ObjectType):
 
     def resolve_getUserbyID(self, info, userID):
         user = User.query.filter_by(userID=userID).first()
-        print(user.userID)
-        print(user.display_name)
-        return GraphQL_user(
-            userID=user.userID,
-            displayName=user.display_name,
-            email=user.email,
-            coinVal=user.coin_val
-        )
+        if user is not None:
+            return GraphQL_user(
+                userID=user.userID,
+                displayName=user.display_name,
+                email=user.email,
+                coinVal=user.coin_val
+            )
+        else:
+            return {}
 
 schema = graphene.Schema(query=Query, mutation=Mutations)
 
