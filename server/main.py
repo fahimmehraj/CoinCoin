@@ -46,6 +46,8 @@ class Query(graphene.ObjectType):
 
     getOffer = graphene.List(of_type=generic.GenericScalar, offerID=graphene.Int(default_value=1), userID=graphene.String(default_value="none"))
 
+    offers = graphene.List(of_type=generic.GenericScalar, offerID=graphene.Int(default_value=1), userID=graphene.String(default_value="none"))
+
     mineCoin=graphene.String(userID=graphene.String())
 
 
@@ -188,6 +190,18 @@ class Query(graphene.ObjectType):
                 }
                 response.append(temp_dict)
             return response
+
+    def resolve_offers(self, info, **args):
+        all_offers = Offer.query.all()
+        response = []
+        for offer in all_offers:
+            response.append({
+                    "OfferID": offer.offerID,
+                    "USD_Offer": offer.USDOffer,
+                    "coin_Offer": offer.coinCoinOffer,
+                    "userID": offer.userID
+                })
+        return response;
 
     def resolve_mineCoin(self, info, userID):
         query_user = User.query.filter_by(userID=userID)[0]
