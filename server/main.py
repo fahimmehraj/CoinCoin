@@ -44,6 +44,8 @@ class Query(graphene.ObjectType):
 
     getUser= graphene.List(of_type=generic.GenericScalar, userID=graphene.Int(default_value=2), displayName=graphene.String(default_value=""))
 
+    getOffer = graphene.List(of_type=generic.GenericScalar, offerID=graphene.Int(default_value=1), userID=graphene.Int(default_value=1))
+
         
     """
     createUser method
@@ -98,6 +100,65 @@ class Query(graphene.ObjectType):
 
         return "Created offer {} by {}".format(backOfferID, userID)
     
+    """
+    getOffer method
+
+    Fields
+    ------
+    offerID (optional) : int
+        Searches database for offer using specified OfferID
+    userID (optional): int
+        Searches database for offers made by specified UserID
+    
+    Returns
+    -------
+    A list of offers
+    """
+
+    def resolve_getOffer(self, info, offerID, userID):
+        # if no offer ID is specified, search by user ID
+        if offerID == 1:
+            query_offer = Offer.query.filter_by(userID=userID)
+            response = []
+            for offer in query_offer:
+                temp_dict = {
+                    "OfferID": offer.offerID,
+                    "USD_Offer": offer.USDOffer,
+                    "coin_Offer": offer.coinCoinOffer,
+                    "userID": offer.userID
+                }
+                response.append(temp_dict)
+            return response
+        # if no user ID is specified, search by offer ID
+        elif userID == 1:
+            query_offer = Offer.query.filter_by(offerID=offerID)
+            response = []
+            for offer in query_offer:
+                temp_dict = {
+                    "OfferID": offer.offerID,
+                    "USD_Offer": offer.USDOffer,
+                    "coin_Offer": offer.coinCoinOffer,
+                    "userID": offer.userID
+                }
+                response.append(temp_dict)
+            return response
+
+    """
+    getUser method
+
+    Fields
+    ------
+    userID (optional) : int
+        Searches database based on specified user ID
+    displayName (optional): str
+        Searches database based on specified username/display name
+
+    Returns
+    ------
+    A list of users containing information such as their ID, display name, email, and number of CoinCoins they have.
+
+    """
+
     def resolve_getUser(self, info, userID, displayName):
         # if no user ID is specified, search by display name
         if userID == 2:
