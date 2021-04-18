@@ -271,7 +271,8 @@ class Query(graphene.ObjectType):
                     "OfferID": offer.offerID,
                     "USD_Offer": offer.USDOffer,
                     "coin_Offer": offer.coinCoinOffer,
-                    "userID": offer.userID
+                    "userID": offer.userID,
+                    "displayName": offer.displayName,
                 })
         return response;
 
