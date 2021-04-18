@@ -33,6 +33,7 @@ class Offer(db.Model):
     offerID = db.Column(db.String, primary_key=True)
     coinCoinOffer = db.Column(db.Integer)
     USDOffer = db.Column(db.Float)
+    display_name = db.Column(db.VARCHAR(25))
     userID = db.Column(db.Integer)
     userID = db.Column(db.Integer, db.ForeignKey(User.userID), nullable=False)
     
@@ -66,19 +67,21 @@ class CreateOffer(graphene.Mutation):
         USDOffer = graphene.Float()
         coinOffer = graphene.Int()
         userID = graphene.String()
+        displayName = graphene.String()
     ok = graphene.Boolean()
     offer = graphene.Field(lambda: GraphQL_offer)
 
-    def mutate(self, info, USDOffer, coinOffer, userID):
+    def mutate(self, info, USDOffer, coinOffer, userID, displayName):
         backOfferID = int("{}{}{}{}{}{}{}{}".format(random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9)))
 
         offer = GraphQL_offer(
             offerID = backOfferID,
             USD_Offer = USDOffer,
             coin_Offer = coinOffer,
-            userID = userID
+            userID = userID,
+            displayName=displayName
         )
-        DB_Offer = Offer(offerID=backOfferID, coinCoinOffer=coinOffer, USDOffer=USDOffer, userID=userID)
+        DB_Offer = Offer(offerID=backOfferID, coinCoinOffer=coinOffer, USDOffer=USDOffer, userID=userID, display_name=displayName)
         db.session.add(DB_Offer)
         db.session.commit()
         ok = True
@@ -315,7 +318,8 @@ class Query(graphene.ObjectType):
             offerID=offer.offerID,
             USD_Offer=offer.USDOffer,
             coin_Offer=offer.coinCoinOffer,
-            userID=offer.userID
+            userID=offer.userID,
+            displayName=offer.display_name
         )
 
     def resolve_getUserbyID(self, info, userID):

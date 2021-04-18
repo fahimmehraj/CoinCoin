@@ -11,3 +11,4 @@ class GraphQL_offer(graphene.ObjectType):
     USD_Offer = graphene.Float()
     coin_Offer = graphene.Int()
     userID = graphene.String()
+    displayName = graphene.String()
