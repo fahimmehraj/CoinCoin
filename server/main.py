@@ -46,7 +46,7 @@ class Query(graphene.ObjectType):
 
     getOffer = graphene.List(of_type=generic.GenericScalar, offerID=graphene.Int(default_value=1), userID=graphene.String(default_value="none"))
 
-    mineCoin=graphene.String(userID=graphene.Int())
+    mineCoin=graphene.String(userID=graphene.String())
 
 
         
