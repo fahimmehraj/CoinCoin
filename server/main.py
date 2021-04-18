@@ -38,15 +38,15 @@ class Offer(db.Model):
 
 # structure of query for graphql api
 class Query(graphene.ObjectType):
-    createUser = graphene.String(email=graphene.String(), displayName=graphene.String(), coinVal=graphene.Int())
+    createUser = graphene.String(userID=graphene.String(), email=graphene.String(), displayName=graphene.String(), coinVal=graphene.Int())
     
-    createOffer = graphene.String(userID=graphene.Int(), coinOffer=graphene.Int(), USDOffer=graphene.Float())
+    createOffer = graphene.String(userID=graphene.String(), coinOffer=graphene.Int(), USDOffer=graphene.Float())
 
-    getUser= graphene.List(of_type=generic.GenericScalar, userID=graphene.Int(default_value=2), displayName=graphene.String(default_value=""))
+    getUser= graphene.List(of_type=generic.GenericScalar, userID=graphene.String(default_value="none"), displayName=graphene.String(default_value=""))
 
-    getOffer = graphene.List(of_type=generic.GenericScalar, offerID=graphene.Int(default_value=1), userID=graphene.Int(default_value=1))
+    getOffer = graphene.List(of_type=generic.GenericScalar, offerID=graphene.Int(default_value=1), userID=graphene.String(default_value="none"))
 
-    mineCoin=graphene.String(userID=graphene.Int())
+    mineCoin=graphene.String(userID=graphene.String())
 
 
         
@@ -63,19 +63,17 @@ class Query(graphene.ObjectType):
         The number of "CoinCoins" the user has
 
     """
-    def resolve_createUser(root, info, email, displayName, coinVal):
-        id = int("{}{}{}{}{}{}{}{}".format(random.randint(0, 6), random.randint(0, 6), random.randint(0, 6), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9)))
-        all_ids = [x.userID for x in User.query.all()]
+    def resolve_createUser(root, info, userID, email, displayName, coinVal):
         
         newUser_json = {    
-            "userID": id,
+            "userID": userID,
             "email": email,
             "displayName": displayName,
             "coinVal": coinVal
         }
         
         # adding new user to database
-        newUser = User(userID=id, email=email, display_name=displayName, coin_val=coinVal) 
+        newUser = User(userID=userID, email=email, display_name=displayName, coin_val=coinVal) 
         db.session.add(newUser)
         db.session.commit()
         return newUser_json
@@ -133,7 +131,7 @@ class Query(graphene.ObjectType):
                 response.append(temp_dict)
             return response
         # if no user ID is specified, search by offer ID
-        elif userID == 1:
+        elif userID == "none":
             query_offer = Offer.query.filter_by(offerID=offerID)
             response = []
             for offer in query_offer:
@@ -164,7 +162,7 @@ class Query(graphene.ObjectType):
 
     def resolve_getUser(self, info, userID, displayName):
         # if no user ID is specified, search by display name
-        if userID == 2:
+        if userID == "none":
             query_user = User.query.filter_by(display_name=displayName)
             response = []
             for user in query_user:
