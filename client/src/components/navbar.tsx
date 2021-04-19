@@ -75,7 +75,7 @@ const NavigationBar: FunctionComponent<NavigationBarProps> = ({ router }) => {
             {state.authData != null &&
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
               <div className="flex items-center">
-                <span className="text-gray-300 px-3 py-2 rounded-md text-sm font-medium">300</span>
+                <span className="text-gray-300 px-3 py-2 rounded-md text-sm font-medium">{state.authData.coinVal}</span>
                 <img src="/default-isolated.svg" alt="CoinCoin SVG Logo" className="h-6 w-6 ml-0" />
               </div>
 
@@ -90,6 +90,7 @@ const NavigationBar: FunctionComponent<NavigationBarProps> = ({ router }) => {
                           className="h-8 w-8 rounded-full"
                           src={state.authData.photoURL}
                           alt=""
+                          onClick={() => console.log(state.authData)}
                         />
                       </Menu.Button>
                     </div>

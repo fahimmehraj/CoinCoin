@@ -1,10 +1,16 @@
 import firebase from 'firebase/app'
 import { Dispatch } from 'react'
 
-type UserData = null | firebase.User
+interface CoinCoinUser {
+    uid: string,
+    email: string,
+    displayName: string,
+    coinVal: string,
+    photoURL: string
+}
 
 export type State = {
-    authData: UserData
+    authData: CoinCoinUser
 }
 
 export interface Context {
@@ -19,10 +25,10 @@ export enum ActionKind {
 
 export type Action = {
     type: ActionKind,
-    payload: UserData
+    payload: CoinCoinUser
 }
 
-export const signInAction = (user: firebase.User): Action => ({
+export const signInAction = (user: CoinCoinUser): Action => ({
     type: ActionKind.signIn,
     payload: user,
 })

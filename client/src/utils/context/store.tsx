@@ -1,5 +1,5 @@
 import { gql, useQuery } from "@apollo/client";
-import React, {createContext, useContext, useEffect, useReducer} from "react";
+import React, { createContext, useContext, useEffect, useReducer } from "react";
 import client from "../apollo-client";
 import { Context as StateContext, signInAction, signOutAction, State } from "../constants";
 import { auth } from "../firebase.utils";
@@ -11,19 +11,44 @@ const initialState: State = {
 };
 
 const checkUser = gql`
-  query {
-    getUser(userID: $uid)
+query getUserbyID($uid: String!) {
+    getUserbyID(userID: $uid) {
+        coinVal
+    }
   }
 `;
 
-const Store = ({children}) => {
+const createUser = gql`
+mutation createUser($uid: String!, $email: String!, $displayName: String!) {
+    createUser(userID: $uid, email: $email, displayName: $displayName, coinVal: 0) {
+      user {
+        coinVal
+        displayName
+      }
+    }
+  }
+  
+`;
+
+const Store = ({ children }) => {
     useEffect(() => {
-        auth.onAuthStateChanged(async(user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
-                dispatch(signInAction(user))
-                console.log(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT)
-                const data = await client.query({ query: checkUser, variables: { uid: "veryrealkey" }})
+                const { error, loading, data } = await client.query({ query: checkUser, variables: { uid: user.uid } })
+                console.log('data')
                 console.log(data)
+                if (data.getUserbyID.coinVal === null) {
+                    console.log('yeh its null')
+                    const { data: newData } = await client.mutate({ mutation: createUser, variables: { uid: user.uid, email: user.email, displayName: user.displayName } })
+                    console.log(newData.coinVal)
+                    const coinCoinUser = { uid: user.uid, email: user.email, displayName: user.displayName, coinVal: newData.getUserbyID.coinVal, photoURL: user.photoURL }
+                    console.log(coinCoinUser)
+                    dispatch(signInAction(coinCoinUser))
+                } else {
+                    console.log('nah u good')
+                    console.log(data.getUserbyID.coinVal)
+                    dispatch(signInAction({ uid: user.uid, email: user.email, displayName: user.displayName, coinVal: data.getUserbyID.coinVal, photoURL: user.photoURL }))
+                }
             } else {
                 dispatch(signOutAction)
             }
@@ -39,6 +64,6 @@ const Store = ({children}) => {
     )
 };
 
-export const Context = createContext<StateContext>({ state: initialState, dispatch: (action) => console.log("hi")});
+export const Context = createContext<StateContext>({ state: initialState, dispatch: (action) => console.log("hi") });
 export const useAuth = () => useContext(Context)
 export default Store;

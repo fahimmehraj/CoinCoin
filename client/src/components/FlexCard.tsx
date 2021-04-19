@@ -1,4 +1,6 @@
+import { gql } from "@apollo/client";
 import { FunctionComponent } from "react";
+import client from "../utils/apollo-client";
 import { useAuth } from "../utils/context/store";
 
 type FlexCardProps = {
@@ -10,6 +12,14 @@ type FlexCardProps = {
 
 const FlexCard: FunctionComponent<FlexCardProps> = ({ title, caption, description, imageURL, children }) => {
   const { state } = useAuth()
+
+  const INCREMENT_QUERY = gql`
+  query mineCoinCoins($userID: String!) {
+    mineCoinCoins(userID: $userID) {
+      coinVal
+    }
+  }
+  `
 
     return (<div className="w-full lg:w-6/12 xl:w-3/12 px-4 flex-grow h-full">
                   <div className="relative flex flex-col min-w-0 break-words bg-white rounded mb-6 xl:mb-0 shadow-lg">
@@ -38,7 +48,10 @@ const FlexCard: FunctionComponent<FlexCardProps> = ({ title, caption, descriptio
                         <button
                                 className="bg-purple-500 hover:bg-purple-600 hover:shadow text-white active:bg-indigo-600 text-xs font-bold uppercase px-8 py-3 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                                 type="button"
-                                onClick={() => console.log(state.authData)}
+                                onClick={async() => {
+                                  const { data } = await client.query({ query: INCREMENT_QUERY, variables: { userID: state.authData.uid }});
+                                  console.log(data)
+                                }}
                             >
                                 {caption}
                       </button>

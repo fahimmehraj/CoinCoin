@@ -1,6 +1,26 @@
-const OfferTable = ({ }) => (
-    
-        <div className="w-full xl:w-8/12 mb-12 xl:mb-0 px-4">
+import { gql, useQuery } from "@apollo/client";
+import { useState } from "react";
+import client from "../../utils/apollo-client";
+import { useAuth } from "../../utils/context/store";
+
+const OfferTable = ({ }) => {
+    const OFFER_QUERY = gql`
+    query offers {
+        offers
+      }
+    `
+
+    const TRANSACTION_QUERY = gql`
+    query transaction($offerID: Int!, $userID: String!) {
+        transaction(offerID: $offerID, userID: $userID)
+    }
+    `
+    const [refreshState, refresh] = useState(0)
+
+    const { state } = useAuth()
+      const { data } = useQuery(OFFER_QUERY);
+
+       return (<div className="w-full xl:w-8/12 mb-12 xl:mb-0 px-4">
             <div className="relative flex flex-col min-w-0 break-words bg-gray-800 w-full mb-6 shadow-lg rounded">
                 <div className="rounded-t mb-0 px-4 py-3 border-0">
                     <div className="flex flex-wrap items-center">
@@ -31,107 +51,40 @@ const OfferTable = ({ }) => (
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-700">
-                            <tr>
-                                <th className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4 text-left">
-                                    Aiden
-                        </th>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                    4,569
+                            {data && data.offers.map((offer) => (
+                                <tr>
+                                    <th className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4 text-left">{offer.displayName}</th>
+                                    <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
+                                    {offer.USD_Offer}
                         </td>
                                 <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                    340
-                        </td>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                <button
-                                className="bg-purple-500 hover:bg-purple-600 hover:shadow text-white active:bg-indigo-600 text-xs font-bold uppercase px-3 py-1 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                                type="button"
-                            >
-                                Trade
-                      </button>
-                        </td>
-                            </tr>
-                            <tr>
-                                <th className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4 text-left">
-                                    Warren
-                        </th>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                    3,985
-                        </td>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                    319
+                                    {offer.coin_Offer}
                         </td>
                                 <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
                                 <button
                                 className="bg-purple-500 hover:bg-purple-600 hover:shadow text-white active:bg-indigo-600 text-xs font-bold uppercase px-3 py-1 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                                 type="button"
+                                onClick={async() => {
+                                    console.log(offer.OfferID)
+                                    console.log(state.authData.uid)
+                                    const { data } = await client.query({ query: TRANSACTION_QUERY, variables: { offerID: offer.OfferID, userID: state.authData.uid }});
+                                    console.log(data)
+                                    refresh(3)
+                                }}
                             >
                                 Trade
                       </button>
                         </td>
                             </tr>
-                            <tr>
-                                <th className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4 text-left">
-                                    Tayab
-                        </th>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                    3,513
-                        </td>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                    294
-                        </td>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                <button
-                                className="bg-purple-500 hover:bg-purple-600 hover:shadow text-white active:bg-indigo-600 text-xs font-bold uppercase px-3 py-1 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                                type="button"
-                            >
-                                Trade
-                      </button>
-                        </td>
-                            </tr>
-                            <tr>
-                                <th className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4 text-left">
-                                    Google Display Name
-                        </th>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                    2,050
-                        </td>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                    147
-                        </td>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                <button
-                                className="bg-purple-500 hover:bg-purple-600 hover:shadow text-white active:bg-indigo-600 text-xs font-bold uppercase px-3 py-1 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                                type="button"
-                            >
-                                Trade
-                      </button>
-                        </td>
-                            </tr>
-                            <tr>
-                                <th className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4 text-left">
-                                    Fahim
-                        </th>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                    1,795
-                        </td>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                    190
-                        </td>
-                                <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-white text-xs whitespace-nowrap p-4">
-                                <button
-                                className="bg-purple-500 hover:bg-purple-600 hover:shadow text-white active:bg-indigo-600 text-xs font-bold uppercase px-3 py-1 rounded outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                                type="button"
-                            >
-                                Trade
-                      </button>
-                        </td>
-                            </tr>
+
+                            ))}
+                            
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
+        </div>)
 
-)
+};
 
 export default OfferTable;
