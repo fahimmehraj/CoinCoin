@@ -1,6 +1,4 @@
 import graphene
-import json
-import pymysql
 import secrets
 import random
 
