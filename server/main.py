@@ -38,7 +38,7 @@ class Offer(db.Model):
     userID = db.Column(db.Integer, db.ForeignKey(User.userID), nullable=False)
 
     def __repr__(self):
-        return "Offer ID {} created, {} coincoins for ${} ".format(offerID, coinCoinOffer, USDOffer)
+        return "Offer ID {} created, {} coincoins for ${} ".format(self.offerID, self.coinCoinOffer, self.USDOffer)
 
 # mutations
 
@@ -104,28 +104,15 @@ class Mutations(graphene.ObjectType):
 
 
 class Query(graphene.ObjectType):
-    createUser = graphene.String(userID=graphene.String(), email=graphene.String(
-    ), displayName=graphene.String(), coinVal=graphene.Int())
+    offers = graphene.List(of_type=GraphQL_offer)
 
-    createOffer = graphene.String(userID=graphene.String(
-    ), coinOffer=graphene.Int(), USDOffer=graphene.Float())
-
-    getUser = graphene.List(of_type=generic.GenericScalar, userID=graphene.String(
-        default_value="none"), displayName=graphene.String(default_value=""))
-
-    getOffer = graphene.List(of_type=generic.GenericScalar, offerID=graphene.Int(
-        default_value=1), userID=graphene.String(default_value="none"))
-
-    offers = graphene.List(of_type=generic.GenericScalar, offerID=graphene.Int(
-        default_value=1), userID=graphene.String(default_value="none"))
-
-    mineCoin = graphene.String(userID=graphene.String())
+    users = graphene.List(of_type=GraphQL_user)
 
     # API rewrite methods
-    getUserbyID = graphene.Field(
+    user = graphene.Field(
         GraphQL_user, userID=graphene.String(default_value="none"))
 
-    getOfferbyID = graphene.Field(
+    offer = graphene.Field(
         GraphQL_offer, offerID=graphene.Int(default_value=-1))
 
     mineCoinCoins = graphene.Field(
@@ -135,176 +122,6 @@ class Query(graphene.ObjectType):
         offerID=graphene.Int(), userID=graphene.String())
 
     cancelOffer = graphene.Boolean(offerID=graphene.Int())
-
-    user = graphene.Field(GraphQL_user)
-
-    offer = graphene.Field(GraphQL_offer)
-
-    """
-    createUser method
-
-    Fields
-    ------
-    email : str
-        User's email
-    displayName : str
-        The display name for the user
-    coinVal : int
-        The number of "CoinCoins" the user has
-
-    """
-    # deprecated
-    def resolve_createUser(root, info, userID, email, displayName, coinVal):
-
-        newUser_json = {
-            "userID": userID,
-            "email": email,
-            "displayName": displayName,
-            "coinVal": coinVal
-        }
-
-        # adding new user to database
-        newUser = User(userID=userID, email=email,
-                       display_name=displayName, coin_val=coinVal)
-        db.session.add(newUser)
-        db.session.commit()
-        return newUser_json
-
-    """
-    createOffer method
-
-    Fields
-    ------
-    id : int
-        Unique User ID number
-    coinOffer : int
-        The number of CoinCoins for USD
-    USDOffer : int
-        The number of USD for CoinCoins
-
-    """
-    # deprecated
-    def resolve_createOffer(root, info, userID, coinOffer, USDOffer):
-        backOfferID = int("{}{}{}{}{}{}{}{}".format(random.randint(0, 9), random.randint(0, 9), random.randint(
-            0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9), random.randint(0, 9)))
-
-        dbOffer = Offer(offerID=backOfferID, coinCoinOffer=coinOffer,
-                        USDOffer=USDOffer, userID=userID)
-        db.session.add(dbOffer)
-        db.session.commit()
-
-        return "Created offer {} by {}".format(backOfferID, userID)
-
-    """
-    getOffer method
-
-    Fields
-    ------
-    offerID (optional) : int
-        Searches database for offer using specified OfferID
-    userID (optional): int
-        Searches database for offers made by specified UserID
-    
-    Returns
-    -------
-    A list of offers
-    """
-    # deprecated
-
-    def resolve_getOffer(self, info, offerID, userID):
-        # if no offer ID is specified, search by user ID
-        if offerID == 1:
-            query_offer = Offer.query.filter_by(userID=userID)
-            response = []
-            for offer in query_offer:
-                temp_dict = {
-                    "offerID": offer.offerID,
-                    "USD_Offer": offer.USDOffer,
-                    "coin_Offer": offer.coinCoinOffer,
-                    "userID": offer.userID
-                }
-                response.append(temp_dict)
-            return response
-        # if no user ID is specified, search by offer ID
-        elif userID == "none":
-            query_offer = Offer.query.filter_by(offerID=offerID)
-            response = []
-            for offer in query_offer:
-                temp_dict = {
-                    "OfferID": offer.offerID,
-                    "USD_Offer": offer.USDOffer,
-                    "coin_Offer": offer.coinCoinOffer,
-                    "userID": offer.userID
-                }
-                response.append(temp_dict)
-            return response
-
-    """
-    getUser method
-
-    Fields
-    ------
-    userID (optional) : int
-        Searches database based on specified user ID
-    displayName (optional): str
-        Searches database based on specified username/display name
-
-    Returns
-    ------
-    A list of users containing information such as their ID, display name, email, and number of CoinCoins they have.
-
-    """
-    # deprecated, use resolve_getUserbyID instead
-
-    def resolve_getUser(self, info, userID, displayName):
-        # if no user ID is specified, search by display name
-        if userID == "none":
-            query_user = User.query.filter_by(display_name=displayName)
-            response = []
-            for user in query_user:
-                temp_dict = {
-                    "userID": user.userID,
-                    "displayName": user.display_name,
-                    "email": user.email,
-                    "coinVal": user.coin_val
-                }
-
-                response.append(temp_dict)
-            return response
-        # if no display name is specified, search by user ID
-        elif displayName == "":
-            query_user = User.query.filter_by(userID=userID)
-            response = []
-            for user in query_user:
-                temp_dict = {
-                    "userID": user.userID,
-                    "displayName": user.display_name,
-                    "email": user.email,
-                    "coinVal": user.coin_val
-                }
-                response.append(temp_dict)
-            return response
-
-    def resolve_offers(self, info, **args):
-        all_offers = Offer.query.all()
-        response = []
-        for offer in all_offers:
-            response.append({
-                "OfferID": offer.offerID,
-                "USD_Offer": offer.USDOffer,
-                "coin_Offer": offer.coinCoinOffer,
-                "userID": offer.userID,
-                "displayName": offer.display_name,
-            })
-        return response
-
-    # deprecated, use resolve_mineCoinCoins instead
-    def resolve_mineCoin(self, info, userID):
-        query_user = User.query.filter_by(userID=userID)[0]
-        current_coinVal = query_user.coin_val
-        query_user.coin_val = current_coinVal+1
-        db.session.commit()
-        return "User {} now has {} coincoins (previous was {}).".format(userID, current_coinVal+1, current_coinVal)
 
     # API Rewrite Methods
 
@@ -336,7 +153,7 @@ class Query(graphene.ObjectType):
         db.session.commit()
         return True
 
-    def resolve_getOfferbyID(self, info, offerID):
+    def resolve_offer(self, info, offerID):
         offer = Offer.query.filter_by(offerID=offerID).first()
         return GraphQL_offer(
             offerID=offer.offerID,
@@ -346,7 +163,21 @@ class Query(graphene.ObjectType):
             displayName=offer.display_name
         )
 
-    def resolve_getUserbyID(self, info, userID):
+    def resolve_offers(self, info):
+        offers_query = Offer.query.all()
+        if offers_query is not None:
+            offers = [GraphQL_offer(
+                offerID=offer.offerID,
+                USD_Offer=offer.USDOffer,
+                coin_Offer=offer.coinCoinOffer,
+                userID=offer.userID,
+                displayName=offer.display_name
+            ) for offer in offers_query]
+        else:
+            offers = []
+        return offers
+
+    def resolve_user(self, info, userID):
         user = User.query.filter_by(userID=userID).first()
         if user is not None:
             offers_query = Offer.query.filter_by(userID=userID).all()
@@ -369,6 +200,27 @@ class Query(graphene.ObjectType):
             )
         else:
             return {}
+    
+    # i am so proud of this function like im a genius
+    def resolve_users(self, info):
+        users_query = db.session.query(User, Offer).outerjoin(Offer).all()
+        if users_query is not None:
+            users = [GraphQL_user(
+                userID=join[0].userID,
+                displayName=join[0].display_name,
+                email=join[0].email,
+                coinVal=join[0].coin_val,
+                offers=[GraphQL_offer(
+                    offerID=offer.offerID,
+                    USD_Offer=offer.USDOffer,
+                    coin_Offer=offer.coinCoinOffer,
+                    userID=offer.userID,
+                    displayName=offer.display_name
+                ) for offer in join if type(offer) is Offer]
+            ) for join in users_query]
+        else:
+            users = []
+        return users
 
 
 schema = graphene.Schema(query=Query, mutation=Mutations)
